@@ -139,6 +139,30 @@ public class ExpenseTracker{
             e.printStackTrace();
         }
     }
+    static void viewExpensesByCategoryFromDB(){
+        String sql="""
+                SELECT category , SUM(amount)AS total
+                FROM expenses
+                GROUP BY category
+            """;
+        try(Connection conn = getConnection();Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql)){
+                System.out.println("Expenses by category:");
+                boolean found =false;
+                while(rs.next()){
+                    String category = rs.getString("category");
+                    double total = rs.getDouble("total");
+                    System.out.println(category+" :$"+total);
+                    found = true;
+                }
+                if(!found){
+                    System.out.println("No expenses recorded.");
+                }
+            }catch(SQLException e){
+                System.out.println("Error fetching category wise expenses.");
+                e.printStackTrace();
+            }
+    }
 
     /*static void viewExpenses(){
         if(expenses.isEmpty()){
@@ -241,6 +265,7 @@ public class ExpenseTracker{
                 viewExpensesByDateFromDB(sc);
             }else if (choice==5){
                 //viewExpenseByCategory();
+                viewExpensesByCategoryFromDB();
             }
             else{
                 System.out.println("Invalid choice. Try again.");
