@@ -1,0 +1,10 @@
+# Compiled Java files
+*.class
+
+# SQLite database file
+*.db
+
+# IDE / OS files
+.idea/
+.vscode/
+*.log
