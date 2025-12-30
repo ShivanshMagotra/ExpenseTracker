@@ -173,30 +173,58 @@ public class ExpenseTracker{
         int id = sc.nextInt();
         sc.nextLine();
 
-        System.out.print("Enter new title: ");
-        String title = sc.nextLine();
-
-        System.out.print("Enter new category: ");
-        String category = sc.nextLine();
-
-        System.out.print("Enter new amount: ");
-        double amount = sc.nextDouble();
+        System.out.println("What do you want to update?");
+        System.out.println("1. Title");
+        System.out.println("2. Category");
+        System.out.println("3. Amount");
+        System.out.println("4. Date");
+        
+        System.out.print("Enter choice: ");
+        int choice = sc.nextInt();
         sc.nextLine();
 
-        System.out.print("Enter new date(YYYY-MM-DD): ");
-        String date = sc.nextLine();
-
-        String sql = """
-                UPDATE expenses
-                SET title = ?,category =?, amount=?,date=?
-                WHERE id=?
-            """;
-        try(Connection conn = getConnection();PreparedStatement pstmt = conn.prepareStatement(sql)){
-            pstmt.setString(1,title);
-            pstmt.setString(2,category);
-            pstmt.setDouble(3,amount);
-            pstmt.setString(4,date);
-            pstmt.setInt(5,id);
+        String sql = "";
+        try(Connection conn = getConnection()){
+            PreparedStatement pstmt = null;
+            switch(choice){
+                case 1:
+                    System.out.print("Enter new title: ");
+                    String title = sc.nextLine();
+                    sql = "UPDATE expenses SET title= ? WHERE id=?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setString(1,title);
+                    pstmt.setInt(2,id);
+                    break;
+                case 2:
+                    System.out.print("Enter new category: ");
+                    String category = sc.nextLine();
+                    sql="UPDATE expenses SET category =? WHERE id = ?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setString(1,category);
+                    pstmt.setInt(2,id);
+                    break;
+                case 3:
+                    System.out.print("Enter new amount: ");
+                    double amount = sc.nextDouble();
+                    sc.nextLine();
+                    sql = "UPDATE expenses SET amount = ? WHERE id = ?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setDouble(1,amount);
+                    pstmt.setInt(2,id);
+                    break;
+                case 4:
+                    System.out.print("Enter new date: ");
+                    String date = sc.nextLine();
+                    sql="UPDATE expenses SET date = ? WHERE id =?";
+                    pstmt = conn.prepareStatement(sql);
+                    pstmt.setString(1,date);
+                    pstmt.setInt(2,id);
+                    break;
+                default:
+                    System.out.println("Invalid choice.");
+                    return;
+            }
+            
             int rowsAffected =  pstmt.executeUpdate();
             if(rowsAffected>0){
                 System.out.println("Expenses updated successfully.");
