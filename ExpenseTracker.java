@@ -1,22 +1,7 @@
-import java.util.*;
-import java.io.*;
+import java.util.Scanner;
 import java.sql.*;
 
-class Expense{
-    String title;
-    String category;
-    double amount;
-    String date;
-
-    Expense(String title,String category,double amount,String date){
-        this.title = title;
-        this.amount = amount;
-        this.category=category;
-        this.date = date;
-    }
- }
 public class ExpenseTracker{
-    //static ArrayList<Expense> expenses = new ArrayList<>();
 
     static Connection getConnection() throws SQLException{
         String url = "jdbc:sqlite:expenses.db";
@@ -71,14 +56,12 @@ public class ExpenseTracker{
         System.out.print("Enter the date(YYYY-MM-DD): ");
         String date = sc.nextLine();
 
-        // Expense e = new Expense(title, category,amount,date);
-        // expenses.add(e);
         addExpenseToDB(title, category, amount, date);
 
         System.out.println("Expense added successfully!");
     }
     static void viewExpensesFromDB(){
-        String sql="SELECT title,category,amount,date FROM expenses";
+        String sql="SELECT id,title,category,amount,date FROM expenses";
         double total=0;
         try(Connection conn = getConnection();
             Statement stmt = conn.createStatement();
@@ -90,7 +73,8 @@ public class ExpenseTracker{
                     String category = rs.getString("category");
                     Double amount = rs.getDouble("amount");
                     String date = rs.getString("date");
-                    System.out.println(title + " | "+ category +" | $"+ amount + " | "+ date);
+                    int id = rs.getInt("id");
+                    System.out.println(id+" | "+title + " | "+ category +" | $"+ amount + " | "+ date);
                     total +=amount;
                     found = true;
                 }
@@ -105,10 +89,10 @@ public class ExpenseTracker{
         }
     }
     static void viewExpensesByDateFromDB(Scanner sc){
-        System.out.println("Enter date(YYYY-MM-DD): ");
+        System.out.print("Enter date(YYYY-MM-DD): ");
         String inputDate = sc.nextLine();
         String sql = """
-                SELECT title,category,amount,date FROM expenses WHERE date = ?
+                SELECT id,title,category,amount,date FROM expenses WHERE date = ?
         """;
         double total =0;
         boolean found = false;
@@ -124,8 +108,9 @@ public class ExpenseTracker{
                 String category = rs.getString("category");
                 double amount = rs.getDouble("amount");
                 String date = rs.getString("date");
+                int id = rs.getInt("id");
 
-                System.out.println(title+" | "+ category + " | $"+amount+" | "+date );
+                System.out.println(id+" | "+title+" | "+ category + " | $"+amount+" | "+date );
                 total+=amount;
                 found = true;
             }
@@ -163,115 +148,100 @@ public class ExpenseTracker{
                 e.printStackTrace();
             }
     }
+    static void deleteExpensesByIdFromDB(Scanner sc){
+        System.out.print("Enter expense ID to delete: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+        String sql = "DELETE FROM expenses WHERE id = ?";
+        try(Connection conn = getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setInt(1,id);
+            int rowsAffected = pstmt.executeUpdate();
+            
+            if(rowsAffected>0){
+                System.out.println("Expense deleted successfully.");
+            }else{
+                System.out.println("No expense found with this ID.");
+            }
+        }catch(SQLException e){
+            System.out.println("Error deleting expense.");
+            e.printStackTrace();
+        }
+    }
+    static void updateExpenseByIdFromDB(Scanner sc){
+        System.out.print("Enter expense id to update: ");
+        int id = sc.nextInt();
+        sc.nextLine();
 
-    /*static void viewExpenses(){
-        if(expenses.isEmpty()){
-            System.out.println("No expenses recorded.");
-            return;
-        }
-        double total=0;
-        System.out.println("\n Your Expenses:");
-        for(Expense exp: expenses){
-            System.out.println(exp.title + " | "+exp.category+" | $"+exp.amount+" | "+exp.date);
-            total+=exp.amount;
-        }
-        System.out.println("Total Spent: $"+total);    
-    }
-    static void saveExpensesToFile(){
-        try{
-            FileWriter fw = new FileWriter("expenses.txt");
-            for(Expense exp: expenses){
-                fw.write(exp.title + ", "+exp.category+", "+ exp.amount+", "+exp.date+"\n");
+        System.out.print("Enter new title: ");
+        String title = sc.nextLine();
+
+        System.out.print("Enter new category: ");
+        String category = sc.nextLine();
+
+        System.out.print("Enter new amount: ");
+        double amount = sc.nextDouble();
+        sc.nextLine();
+
+        System.out.print("Enter new date(YYYY-MM-DD): ");
+        String date = sc.nextLine();
+
+        String sql = """
+                UPDATE expenses
+                SET title = ?,category =?, amount=?,date=?
+                WHERE id=?
+            """;
+        try(Connection conn = getConnection();PreparedStatement pstmt = conn.prepareStatement(sql)){
+            pstmt.setString(1,title);
+            pstmt.setString(2,category);
+            pstmt.setDouble(3,amount);
+            pstmt.setString(4,date);
+            pstmt.setInt(5,id);
+            int rowsAffected =  pstmt.executeUpdate();
+            if(rowsAffected>0){
+                System.out.println("Expenses updated successfully.");
+            }else{
+                System.out.println("No expenses found with this ID.");
             }
-            fw. close();
-        }catch(IOException e){
-            System.out.println("Error saving expenses.");
+        }catch(SQLException e){
+            System.out.println("Error updating expense.");
+            e.printStackTrace();
         }
     }
-    static void loadExpensesFromFile(){
-        try{
-            File file = new File("expenses.txt");
-            if(!file.exists()) return;
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            String line;
-            while((line=br.readLine())!=null){
-                String [] parts = line.split(",");
-                String title = parts[0].trim();
-                String category =parts[1].trim();
-                double amount = Double.parseDouble(parts[2].trim());
-                String date= parts[3].trim();
-                expenses.add(new Expense(title,category,amount,date));
-            }
-            br.close();
-        }catch(Exception e){
-            System.out.println("Error loading expenses.");
-        }
-    }
-    static void viewExpensesbyDate(Scanner sc){
-        System.out.print("Enter the date(YYYY-MM-DD)");
-        String inputDate = sc.nextLine();
-        boolean found=false;
-        double total =0;
-        for(Expense exp : expenses){
-            if(exp.date.equals(inputDate)){
-                System.out.println(exp.title +" | "+ exp.category+" | $"+exp.amount+" | "+exp.date);
-                total+=exp.amount;
-                found=true;
-            }
-        }
-        if(!found){
-            System.out.println("No expenses found for this date");
-        }else{
-            System.out.println("Total expenses on "+inputDate+" :$"+total);
-        }
-    }
-    static void viewExpenseByCategory(){
-        if(expenses.isEmpty()){
-            System.out.println("No expenses recorded.");
-            return;
-        }
-        HashMap<String,Double> map = new HashMap<>(); 
-        for(Expense exp: expenses){
-            map.put(exp.category,map.getOrDefault(exp.category,0.0)+exp.amount);
-        }
-        System.out.println("Expenses by category: ");
-        for(Map.Entry<String, Double> entry: map.entrySet()){
-            System.out.println(entry.getKey()+": $"+entry.getValue());
-        }
-    }*/
     public static void main(String args[]){
         createTable();
-        //loadExpensesFromFile();
         Scanner sc = new Scanner(System.in);
         int choice;
-        do{// do while because we have to show the menu to the user at least once
+        do{
             System.out.println("1. Add Expense");
             System.out.println("2. View Expenses");
             System.out.println("3. Exit");
             System.out.println("4. View Expenses by date");
             System.out.println("5. View Expenses by category");
+            System.out.println("6. Delete expense");
+            System.out.println("7. Update expense");
             System.out.print("Enter your choice: ");
             choice = sc.nextInt();
             sc.nextLine();
             if(choice==1){
                 addExpense(sc);
             }else if(choice==2){
-                //viewExpenses();
                 viewExpensesFromDB();
             }else if(choice==3){
                 System.out.println("Exiting Goodbye!");
             }else if(choice ==4){
-                //viewExpensesbyDate(sc);
                 viewExpensesByDateFromDB(sc);
             }else if (choice==5){
-                //viewExpenseByCategory();
                 viewExpensesByCategoryFromDB();
+            }else if(choice ==6){
+                deleteExpensesByIdFromDB(sc);
+            }else if(choice==7){
+                updateExpenseByIdFromDB(sc);
             }
             else{
                 System.out.println("Invalid choice. Try again.");
             }
         }while(choice!=3);
-        //saveExpensesToFile();
         sc.close();
     }
 }
