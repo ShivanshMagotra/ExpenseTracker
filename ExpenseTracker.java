@@ -236,40 +236,58 @@ public class ExpenseTracker{
             e.printStackTrace();
         }
     }
+    static void clearScreen(){
+        System.out.println("\033[H\033[2J");
+        System.out.flush();
+    }
     public static void main(String args[]){
         createTable();
         Scanner sc = new Scanner(System.in);
         int choice;
         do{
-            System.out.println("1. Add Expense");
-            System.out.println("2. View Expenses");
-            System.out.println("3. Exit");
-            System.out.println("4. View Expenses by date");
-            System.out.println("5. View Expenses by category");
-            System.out.println("6. Delete expense");
-            System.out.println("7. Update expense");
-            System.out.print("Enter your choice: ");
+            clearScreen();
+            System.out.println("==== Expense Tracker Menu ====");
+            System.out.println("1. Add a new Expense");
+            System.out.println("2. View all Expenses");
+            System.out.println("3. View Expenses by date");
+            System.out.println("4. View category-wise totals");
+            System.out.println("5. Update an expense");
+            System.out.println("6. Delete an expense");
+            System.out.println("7. Exit");
+            System.out.print("Choose an option: ");
             choice = sc.nextInt();
             sc.nextLine();
             if(choice==1){
                 addExpense(sc);
+                System.out.println("\nPress Enter to continue...");
+                sc.nextLine();
             }else if(choice==2){
                 viewExpensesFromDB();
+                System.out.println("\nPress Enter to continue...");
+                sc.nextLine();
             }else if(choice==3){
-                System.out.println("Exiting Goodbye!");
-            }else if(choice ==4){
                 viewExpensesByDateFromDB(sc);
-            }else if (choice==5){
+                System.out.println("\nPress Enter to continue...");
+                sc.nextLine();
+            }else if(choice ==4){
                 viewExpensesByCategoryFromDB();
+                System.out.println("\nPress Enter to continue...");
+                sc.nextLine();
+            }else if (choice==5){
+                updateExpenseByIdFromDB(sc);
+                System.out.println("\nPress Enter to continue...");
+                sc.nextLine();
             }else if(choice ==6){
                 deleteExpensesByIdFromDB(sc);
+                System.out.println("\nPress Enter to continue...");
+                sc.nextLine();
             }else if(choice==7){
-                updateExpenseByIdFromDB(sc);
+                System.out.println("Exiting Goodbye!");
             }
             else{
-                System.out.println("Invalid choice. Try again.");
+                System.out.println("Invalid option. Try again.");
             }
-        }while(choice!=3);
+        }while(choice!=7);
         sc.close();
     }
 }
