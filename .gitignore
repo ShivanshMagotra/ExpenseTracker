@@ -3,6 +3,10 @@
 
 # SQLite database file
 *.db
+*.txt
+
+#jdbc driver
+*.jar
 
 # IDE / OS files
 .idea/
